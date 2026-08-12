@@ -19,8 +19,6 @@ export function createOpticsScene(container) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.prepend(renderer.domElement);
   const orbitControls = new OrbitControls(camera3d, renderer.domElement);
   orbitControls.enabled = false;
@@ -56,26 +54,24 @@ export function createOpticsScene(container) {
   const setArrow=(object,start,end,fraction)=>{const a=new THREE.Vector3(...start),b=new THREE.Vector3(...end),direction=b.clone().sub(a);object.position.copy(a.clone().lerp(b,fraction));object.setDirection(direction.normalize());};
 
   const group3d=new THREE.Group();group3d.visible=false;scene.add(group3d);
-  scene.add(new THREE.HemisphereLight(0xffffff,0x596067,2.2));
-  const key=new THREE.DirectionalLight(0xffffff,4);key.position.set(-4,8,7);key.castShadow=true;scene.add(key);
-  const rim=new THREE.PointLight(0xc41234,18,14,2);rim.position.set(-4,-2,2);scene.add(rim);
-  const floor=new THREE.Mesh(geometry(new THREE.PlaneGeometry(18,14)),material(new THREE.MeshStandardMaterial({color:0x202427,roughness:.72,metalness:.08})));floor.rotation.x=-Math.PI/2;floor.position.y=-4.55;floor.receiveShadow=true;group3d.add(floor);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x596067,2.5));
+  const floor=new THREE.Mesh(geometry(new THREE.PlaneGeometry(18,14)),material(new THREE.MeshBasicMaterial({color:0x202427})));floor.rotation.x=-Math.PI/2;floor.position.y=-4.55;group3d.add(floor);
   const boxGeometry=geometry(new THREE.BoxGeometry(12,4.2,7));
-  function mediumVolume(y,color){const mat=material(new THREE.MeshPhysicalMaterial({color,transparent:true,opacity:.27,roughness:.12,transmission:.28,thickness:1.8,ior:1.33,side:THREE.DoubleSide,depthWrite:false}));const mesh=new THREE.Mesh(boxGeometry,mat);mesh.position.y=y;mesh.renderOrder=1;group3d.add(mesh);return mesh;}
+  function mediumVolume(y,color){const mat=material(new THREE.MeshBasicMaterial({color,transparent:true,opacity:.2,side:THREE.FrontSide,depthWrite:false}));const mesh=new THREE.Mesh(boxGeometry,mat);mesh.position.y=y;mesh.renderOrder=1;group3d.add(mesh);return mesh;}
   const upperMedium=mediumVolume(2.12,MEDIUM_COLORS.water),lowerMedium=mediumVolume(-2.12,MEDIUM_COLORS.air);
-  const interfaceMesh=new THREE.Mesh(geometry(new THREE.PlaneGeometry(12,7)),material(new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.24,roughness:.08,side:THREE.DoubleSide})));interfaceMesh.rotation.x=-Math.PI/2;interfaceMesh.position.y=.015;group3d.add(interfaceMesh);
+  const interfaceMesh=new THREE.Mesh(geometry(new THREE.PlaneGeometry(12,7)),material(new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false})));interfaceMesh.rotation.x=-Math.PI/2;interfaceMesh.position.y=.015;group3d.add(interfaceMesh);
   group3d.add(new THREE.Mesh(geometry(new THREE.CylinderGeometry(.012,.012,8,8)),material(new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.42}))));
-  group3d.add(new THREE.Mesh(geometry(new THREE.SphereGeometry(.13,24,16)),material(new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:5}))));
+  group3d.add(new THREE.Mesh(geometry(new THREE.SphereGeometry(.1,24,16)),material(new THREE.MeshBasicMaterial({color:0xffffff}))));
   const beamGeometry=geometry(new THREE.CylinderGeometry(.035,.035,1,16,1,true)),beamGlowGeometry=geometry(new THREE.CylinderGeometry(.105,.105,1,16,1,true));
-  function beam(color){const group=new THREE.Group();group.add(new THREE.Mesh(beamGeometry,material(new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:8,roughness:.2}))));group.add(new THREE.Mesh(beamGlowGeometry,material(new THREE.MeshBasicMaterial({color,transparent:true,opacity:.11,depthWrite:false,side:THREE.DoubleSide}))));group3d.add(group);return group;}
+  function beam(color){const group=new THREE.Group();group.add(new THREE.Mesh(beamGeometry,material(new THREE.MeshBasicMaterial({color}))));group.add(new THREE.Mesh(beamGlowGeometry,material(new THREE.MeshBasicMaterial({color,transparent:true,opacity:.08,depthWrite:false,side:THREE.DoubleSide}))));group3d.add(group);return group;}
   const beamI=beam(COLORS.incident),beamR=beam(COLORS.reflected),beamT=beam(COLORS.refracted);
-  function cone(color){const mesh=new THREE.Mesh(geometry(new THREE.ConeGeometry(.12,.3,18)),material(new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:3})));group3d.add(mesh);return mesh;}
+  function cone(color){const mesh=new THREE.Mesh(geometry(new THREE.ConeGeometry(.12,.3,18)),material(new THREE.MeshBasicMaterial({color})));group3d.add(mesh);return mesh;}
   const coneI=cone(COLORS.incident),coneR=cone(COLORS.reflected),coneT=cone(COLORS.refracted);
   function setCone(object,start,end,fraction){const a=new THREE.Vector3(...start),b=new THREE.Vector3(...end),direction=b.clone().sub(a);object.position.copy(a.clone().lerp(b,fraction));object.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());}
   const laser=new THREE.Group();group3d.add(laser);
-  const body=new THREE.Mesh(geometry(new THREE.CylinderGeometry(.3,.34,1.25,32)),material(new THREE.MeshStandardMaterial({color:0x24292d,roughness:.22,metalness:.82})));body.castShadow=true;laser.add(body);
-  const grip=new THREE.Mesh(geometry(new THREE.CylinderGeometry(.345,.345,.52,32)),material(new THREE.MeshStandardMaterial({color:0x99122e,roughness:.3,metalness:.55})));grip.position.y=-.2;laser.add(grip);
-  const lens=new THREE.Mesh(geometry(new THREE.CylinderGeometry(.19,.19,.08,32)),material(new THREE.MeshStandardMaterial({color:0xff294f,emissive:0xff143e,emissiveIntensity:7,roughness:.08})));lens.position.y=.665;laser.add(lens);
+  const body=new THREE.Mesh(geometry(new THREE.CylinderGeometry(.3,.34,1.25,32)),material(new THREE.MeshLambertMaterial({color:0x24292d})));laser.add(body);
+  const grip=new THREE.Mesh(geometry(new THREE.CylinderGeometry(.345,.345,.52,32)),material(new THREE.MeshLambertMaterial({color:0x99122e})));grip.position.y=-.2;laser.add(grip);
+  const lens=new THREE.Mesh(geometry(new THREE.CylinderGeometry(.19,.19,.08,32)),material(new THREE.MeshBasicMaterial({color:0xff294f})));lens.position.y=.665;laser.add(lens);
 
   function update(result,names={}) {
     const theta=THREE.MathUtils.degToRad(result.incidentAngle),source=[-Math.sin(theta)*4.2,-Math.cos(theta)*3.8,0],reflectedEnd=[Math.sin(theta)*4.2,-Math.cos(theta)*3.8,0];
