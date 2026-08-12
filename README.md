@@ -1,39 +1,16 @@
-# Sandbox: reflexión y refracción
+# Física I · Laboratorios interactivos
 
-Experiencia interactiva independiente del manual. Usa módulos ES, Three.js para la geometría y SVG superpuesto para mantener legibles los arcos y etiquetas.
+Catálogo estático de experiencias educativas publicado con GitHub Pages.
 
-## Ejecutar
+Cada experimento vive en una carpeta autónoma con su HTML, módulos, estilos, documentación y pruebas. Para agregar otro, crear una carpeta apta para URL, usar recursos relativos y añadir su tarjeta en `index.html`.
 
-Desde esta carpeta:
-
-```bash
-npm run serve
-```
-
-Abrir `http://localhost:4173`. Three.js se carga desde jsDelivr, por lo que la primera carga requiere conexión a Internet.
-
-## Pruebas
+## Desarrollo local
 
 ```bash
-npm test
+python3 -m http.server 4173
 ```
 
-Las pruebas cubren conversiones, incidencia normal, índices iguales, aire/agua, ángulo crítico, reflexión total interna, valores próximos a 90° y entradas inválidas.
+- Catálogo: `http://localhost:4173/`
+- Reflexión y refracción: `http://localhost:4173/sandbox-reflexion/`
 
-Con el servidor iniciado, la validación responsive y funcional puede repetirse con:
-
-```bash
-npm run test:browser
-```
-
-El chequeo usa el Playwright ya instalado en el proyecto padre, prueba `1440x900`, `1024x768`, `390x844` y `360x800`, valida que no exista desborde, ejercita reflexión total interna y teclado, y falla ante errores de consola.
-
-## Estructura
-
-- `physics.js`: ley de Snell y cálculos puros.
-- `media.js`: catálogo y presets.
-- `scene.js`: escena, rayos, flechas, cuadrícula y ciclo de vida WebGL.
-- `app.js`: estado, controles, interacción y presentación.
-- `styles.css`: identidad UTN.BA y diseño responsive.
-- `tests/`: pruebas unitarias sin dependencias adicionales.
-- `screenshots/`: capturas verificadas en los cuatro tamaños solicitados.
+Cada push a `main` despliega automáticamente todo el árbol mediante GitHub Pages.
