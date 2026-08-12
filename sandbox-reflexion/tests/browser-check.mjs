@@ -11,6 +11,7 @@ for (const [width,height] of sizes) {
   page.on("pageerror", error => errors.push(`${width}x${height}: ${error.message}`));
   await page.goto("http://127.0.0.1:4173/sandbox-reflexion/", { waitUntil: "networkidle" });
   await page.locator("#scene canvas").waitFor();
+  assert.equal(await page.locator(".wordmark").getAttribute("href"), "../");
   assert.equal(await page.locator("#medium-1").inputValue(), "water");
   assert.equal(await page.locator("#medium-2").inputValue(), "air");
   assert.equal(await page.locator("#animate").getAttribute("aria-pressed"), "true");

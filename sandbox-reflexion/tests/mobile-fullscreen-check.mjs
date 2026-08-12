@@ -1,0 +1,23 @@
+import { chromium } from "../../../node_modules/playwright/index.mjs";
+import assert from "node:assert/strict";
+
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+const errors = [];
+page.on("pageerror", error => errors.push(error.message));
+await page.addInitScript(() => { Object.defineProperty(Element.prototype, "requestFullscreen", { value: undefined, configurable: true }); });
+await page.goto("http://127.0.0.1:4173/sandbox-reflexion/", { waitUntil: "networkidle" });
+await page.locator("#fullscreen").click();
+assert.equal(await page.locator("#scene-shell").evaluate(element => element.classList.contains("fullscreen-fallback")), true);
+assert.equal(await page.locator("body").evaluate(element => element.classList.contains("fullscreen-open")), true);
+const box = await page.locator("#scene-shell").boundingBox();
+assert.ok(Math.abs(box.width - 390) < 2);
+assert.ok(Math.abs(box.height - 844) < 2);
+await page.locator("#fullscreen").click();
+assert.equal(await page.locator("#scene-shell").evaluate(element => element.classList.contains("fullscreen-fallback")), false);
+await page.locator(".wordmark").click();
+await page.locator("#experiments-title").waitFor();
+assert.match(page.url(), /\/fisica-1\/$|\/$/);
+assert.deepEqual(errors, []);
+await browser.close();
+console.log("Mobile fullscreen fallback and catalog navigation passed");

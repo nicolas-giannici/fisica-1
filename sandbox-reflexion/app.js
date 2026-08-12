@@ -90,7 +90,25 @@ sceneElement.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key==="Arr
 const animateButton=$("animate"); function stopAnimation(){state.animating=false;state.animationRun++;cancelAnimationFrame(state.frame);animateButton.setAttribute("aria-pressed","false");animateButton.lastElementChild.textContent="Iniciar demostración";}
 function startAnimation(){state.animating=true;const run=++state.animationRun;animateButton.setAttribute("aria-pressed","true");animateButton.lastElementChild.textContent="Pausar demostración";state.frame=requestAnimationFrame(()=>animate(run));}
 function animate(run){if(!state.animating||run!==state.animationRun)return;state.angle+=state.direction*.18;if(state.angle>=82||state.angle<=3)state.direction*=-1;update();state.frame=requestAnimationFrame(()=>animate(run));} animateButton.addEventListener("click",()=>state.animating?stopAnimation():startAnimation());
-const fullscreenButton=$("fullscreen"),sceneShell=$("scene-shell");fullscreenButton.addEventListener("click",async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await sceneShell.requestFullscreen();});document.addEventListener("fullscreenchange",()=>{const active=document.fullscreenElement===sceneShell;fullscreenButton.setAttribute("aria-pressed",String(active));fullscreenButton.setAttribute("aria-label",active?"Salir de pantalla completa":"Ver escena en pantalla completa");fullscreenButton.querySelector(".fullscreen-label").textContent=active?"Salir":"Pantalla completa";});
+const fullscreenButton=$("fullscreen"),sceneShell=$("scene-shell");
+let fallbackFullscreen=false,previousScrollY=0;
+function updateFullscreenButton(active){fullscreenButton.setAttribute("aria-pressed",String(active));fullscreenButton.setAttribute("aria-label",active?"Salir de pantalla completa":"Ver escena en pantalla completa");fullscreenButton.querySelector(".fullscreen-label").textContent=active?"Salir":"Pantalla completa";}
+function setFallbackFullscreen(active){
+  fallbackFullscreen=active;
+  if(active){previousScrollY=scrollY;sceneShell.style.setProperty("--fullscreen-height",`${visualViewport?.height||innerHeight}px`);sceneShell.classList.add("fullscreen-fallback");document.body.classList.add("fullscreen-open");history.pushState({experimentFullscreen:true},"");}
+  else{sceneShell.classList.remove("fullscreen-fallback");document.body.classList.remove("fullscreen-open");scrollTo(0,previousScrollY);}
+  updateFullscreenButton(active);
+}
+fullscreenButton.addEventListener("click",async()=>{
+  if(fallbackFullscreen){setFallbackFullscreen(false);return;}
+  if(document.fullscreenElement){await document.exitFullscreen();return;}
+  if(sceneShell.requestFullscreen){try{await sceneShell.requestFullscreen();return;}catch{/* Safari móvil requiere el fallback visual. */}}
+  setFallbackFullscreen(true);
+});
+document.addEventListener("fullscreenchange",()=>updateFullscreenButton(document.fullscreenElement===sceneShell));
+addEventListener("popstate",()=>{if(fallbackFullscreen)setFallbackFullscreen(false);});
+addEventListener("keydown",event=>{if(event.key==="Escape"&&fallbackFullscreen)setFallbackFullscreen(false);});
+visualViewport?.addEventListener("resize",()=>{if(fallbackFullscreen)sceneShell.style.setProperty("--fullscreen-height",`${visualViewport.height}px`);});
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;if(reducedMotion)animateButton.hidden=true;
 new ResizeObserver(()=>{let result;try{result=calculateRefraction(state.n1,state.n2,state.angle);}catch{return;}updateAnnotations(result);}).observe(sceneElement);
 window.addEventListener("pagehide",()=>{stopAnimation();opticsScene.dispose();},{once:true}); update();if(!reducedMotion)startAnimation();
