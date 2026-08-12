@@ -1,0 +1,15 @@
+#diagram .grid-lines line{stroke:#72727218;stroke-width:1;vector-effect:non-scaling-stroke}
+#diagram .axis{stroke:#2f3336;stroke-width:1.5;vector-effect:non-scaling-stroke}
+#diagram .plane{stroke:#727272;stroke-width:1.25;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
+#diagram .lens{fill:#a9d9d566;stroke:#187f85;stroke-width:2;vector-effect:non-scaling-stroke}
+#diagram .focus circle{fill:#fff;stroke:#2f3336;stroke-width:1.5}
+#diagram text{fill:#2f3336;font:700 12px Inter,Arial,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+#diagram .vertical-arrow line{stroke-width:4;vector-effect:non-scaling-stroke}
+#diagram .object line,#diagram .object path{stroke:#c41234;fill:#c41234}
+#diagram .image line,#diagram .image path{stroke:#2f3336;fill:#2f3336}
+#diagram .virtual-image{opacity:.62}
+#diagram .principal-ray line{fill:none;stroke-width:2;vector-effect:non-scaling-stroke}
+#diagram .virtual-extension{stroke-dasharray:6 5;opacity:.6}
+#diagram .dimensions line{stroke:#727272;stroke-width:1}
+#diagram .dimensions text{fill:#727272;font-size:11px}
+#diagram .infinity,#diagram .out-frame{fill:#c41234;font-size:13px}
