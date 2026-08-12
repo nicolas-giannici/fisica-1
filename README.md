@@ -13,5 +13,6 @@ python3 -m http.server 4173
 - Catálogo: `http://localhost:4173/`
 - Reflexión y refracción: `http://localhost:4173/sandbox-reflexion/`
 - Lentes delgadas: `http://localhost:4173/sandbox-lentes/`
+- Apunte no oficial: `http://localhost:4173/apuntes/optica-geometrica-apunte-no-oficial-v3.pdf`
 
 Cada push a `main` despliega automáticamente todo el árbol mediante GitHub Pages.
