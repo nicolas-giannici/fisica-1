@@ -31,6 +31,10 @@
               </g>
             </svg>
             <div class="drag-hint" aria-hidden="true"><span>↔</span> arrastrar</div>
+            <div id="controls-3d" class="controls-3d" aria-label="Controles tridimensionales">
+              <div class="camera-stick"><span>Cámara</span><div id="camera-stick" class="stick-pad" role="application" aria-label="Joystick para orbitar la cámara"><i></i></div></div>
+              <label class="laser-slider" for="laser-angle"><span>Láser</span><output id="laser-angle-value" for="laser-angle">40,0°</output><input id="laser-angle" type="range" min="0" max="89.9" step="0.1" value="40" orient="vertical" aria-label="Ángulo del puntero láser"></label>
+            </div>
           </div>
           <p id="scene-description" class="sr-only" aria-live="polite"></p>
           <div class="legend" aria-label="Referencias visuales">

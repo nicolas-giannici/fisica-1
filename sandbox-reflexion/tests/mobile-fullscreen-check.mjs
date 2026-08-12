@@ -13,6 +13,13 @@ assert.equal(await page.locator("body").evaluate(element => element.classList.co
 const box = await page.locator("#scene-shell").boundingBox();
 assert.ok(Math.abs(box.width - 390) < 2);
 assert.ok(Math.abs(box.height - 844) < 2);
+await page.getByRole("button", { name: "3D", exact: true }).click();
+assert.equal(await page.locator("#controls-3d").evaluate(element => element.classList.contains("visible")), true);
+await page.locator("#laser-angle").evaluate(element => { element.value = "55"; element.dispatchEvent(new Event("input", { bubbles: true })); });
+assert.equal(await page.locator("#angle-number").inputValue(), "55.0");
+const stick = await page.locator("#camera-stick").boundingBox();
+await page.touchscreen.tap(stick.x + stick.width * .8, stick.y + stick.height * .5);
+assert.equal(await page.locator("#camera-stick i").evaluate(element => element.style.transform), "translate(0px, 0px)");
 await page.locator("#fullscreen").click();
 assert.equal(await page.locator("#scene-shell").evaluate(element => element.classList.contains("fullscreen-fallback")), false);
 await page.locator(".wordmark").click();

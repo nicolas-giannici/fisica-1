@@ -28,6 +28,11 @@ export function createOpticsScene(container) {
   orbitControls.maxDistance = 24;
   orbitControls.maxPolarAngle = Math.PI * .88;
   orbitControls.addEventListener("change", () => renderer.render(scene, camera));
+  function orbitCamera(deltaAzimuth,deltaPolar){
+    const offset=camera3d.position.clone().sub(orbitControls.target),spherical=new THREE.Spherical().setFromVector3(offset);
+    spherical.theta-=deltaAzimuth;spherical.phi=THREE.MathUtils.clamp(spherical.phi+deltaPolar,.18,Math.PI-.28);
+    camera3d.position.copy(orbitControls.target).add(new THREE.Vector3().setFromSpherical(spherical));camera3d.lookAt(orbitControls.target);orbitControls.update();render();
+  }
 
   const materials = [], geometries = [];
   const geometry = value => (geometries.push(value), value);
@@ -63,7 +68,7 @@ export function createOpticsScene(container) {
   group3d.add(new THREE.Mesh(geometry(new THREE.CylinderGeometry(.012,.012,8,8)),material(new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.42}))));
   group3d.add(new THREE.Mesh(geometry(new THREE.SphereGeometry(.1,24,16)),material(new THREE.MeshBasicMaterial({color:0xffffff}))));
   const beamGeometry=geometry(new THREE.CylinderGeometry(.035,.035,1,16,1,true)),beamGlowGeometry=geometry(new THREE.CylinderGeometry(.105,.105,1,16,1,true));
-  function beam(color){const group=new THREE.Group();group.add(new THREE.Mesh(beamGeometry,material(new THREE.MeshBasicMaterial({color}))));group.add(new THREE.Mesh(beamGlowGeometry,material(new THREE.MeshBasicMaterial({color,transparent:true,opacity:.08,depthWrite:false,side:THREE.DoubleSide}))));group3d.add(group);return group;}
+  function beam(color){const group=new THREE.Group();group.add(new THREE.Mesh(beamGeometry,material(new THREE.MeshBasicMaterial({color}))));group.add(new THREE.Mesh(beamGlowGeometry,material(new THREE.MeshBasicMaterial({color,transparent:true,opacity:.045,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}))));group3d.add(group);return group;}
   const beamI=beam(COLORS.incident),beamR=beam(COLORS.reflected),beamT=beam(COLORS.refracted);
   function cone(color){const mesh=new THREE.Mesh(geometry(new THREE.ConeGeometry(.12,.3,18)),material(new THREE.MeshBasicMaterial({color})));group3d.add(mesh);return mesh;}
   const coneI=cone(COLORS.incident),coneR=cone(COLORS.reflected),coneT=cone(COLORS.refracted);
@@ -85,5 +90,5 @@ export function createOpticsScene(container) {
   function setMode(value){mode=value;group2d.visible=value==="2d";group3d.visible=value==="3d";camera=value==="2d"?camera2d:camera3d;orbitControls.enabled=value==="3d";scene.background.set(value==="2d"?0xf7f8f8:0x111518);resize();}
   function resize(){const width=container.clientWidth,height=container.clientHeight;renderer.setSize(width,height,false);const aspect=width/height,vertical=10;camera2d.left=-vertical*aspect/2;camera2d.right=vertical*aspect/2;camera2d.top=5;camera2d.bottom=-5;camera2d.updateProjectionMatrix();camera3d.aspect=aspect;camera3d.updateProjectionMatrix();render();}
   const observer=new ResizeObserver(resize);observer.observe(container);resize();
-  return {update,setMode,render,get mode(){return mode;},dispose(){observer.disconnect();orbitControls.dispose();geometries.forEach(x=>x.dispose());materials.forEach(x=>x.dispose());renderer.dispose();renderer.domElement.remove();}};
+  return {update,setMode,orbitCamera,render,get mode(){return mode;},dispose(){observer.disconnect();orbitControls.dispose();geometries.forEach(x=>x.dispose());materials.forEach(x=>x.dispose());renderer.dispose();renderer.domElement.remove();}};
 }

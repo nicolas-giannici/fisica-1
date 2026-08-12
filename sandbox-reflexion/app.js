@@ -3,7 +3,7 @@ import { calculateRefraction } from "./physics.js";
 import { createOpticsScene } from "./scene.js";
 
 const $ = id => document.getElementById(id);
-const controls = { m1: $("medium-1"), m2: $("medium-2"), n1: $("n1"), n2: $("n2"), range: $("angle-range"), angle: $("angle-number") };
+const controls = { m1: $("medium-1"), m2: $("medium-2"), n1: $("n1"), n2: $("n2"), range: $("angle-range"), angle: $("angle-number"), laserAngle: $("laser-angle") };
 const state = { medium1: "water", medium2: "air", n1: MEDIA.water.index, n2: MEDIA.air.index, angle: 40, view: "2d", animating: false, frame: null, animationRun: 0, direction: 1 };
 const sceneElement = $("scene");
 const opticsScene = createOpticsScene(sceneElement);
@@ -53,7 +53,7 @@ function updateAnnotations(result) {
 function update() {
   let result;
   try { result = calculateRefraction(state.n1,state.n2,state.angle); } catch { return; }
-  controls.range.value = state.angle; controls.angle.value = Number(state.angle).toFixed(1); controls.range.setAttribute("aria-valuetext",`${format(state.angle)} grados`);
+  controls.range.value = state.angle; controls.angle.value = Number(state.angle).toFixed(1); controls.laserAngle.value = state.angle; $("laser-angle-value").textContent = `${format(state.angle)}°`; controls.range.setAttribute("aria-valuetext",`${format(state.angle)} grados`); controls.laserAngle.setAttribute("aria-valuetext",`${format(state.angle)} grados`);
   controls.m1.value = state.medium1; controls.m2.value = state.medium2; controls.n1.value = state.n1; controls.n2.value = state.n2;
   const [status, explanation] = statusFor(result); $("status-text").textContent = status; $("explanation").textContent = explanation;
   $("metric-i").textContent = `${format(result.incidentAngle)}°`; $("metric-r").textContent = `${format(result.reflectedAngle)}°`; $("metric-2").textContent = result.refractedAngle == null ? "Sin solución" : `${format(result.refractedAngle)}°`; $("metric-c").textContent = result.criticalAngle == null ? "No aplica (n₁ ≤ n₂)" : `${format(result.criticalAngle)}°`;
@@ -79,10 +79,12 @@ controls.m1.addEventListener("change",e=>setMedium(1,e.target.value)); controls.
 controls.n1.addEventListener("input",e=>{if(e.target.validity.valid&&Number(e.target.value)>0){state.n1=Number(e.target.value);update();}}); controls.n2.addEventListener("input",e=>{if(e.target.validity.valid&&Number(e.target.value)>0){state.n2=Number(e.target.value);update();}});
 controls.range.addEventListener("input",e=>setAngle(e.target.value)); controls.angle.addEventListener("input",e=>{if(e.target.validity.valid)setAngle(e.target.value);});
 controls.range.addEventListener("pointerdown",stopAnimation); controls.angle.addEventListener("focus",stopAnimation);
+controls.laserAngle.addEventListener("input",e=>setAngle(e.target.value)); controls.laserAngle.addEventListener("pointerdown",stopAnimation);
 $("swap").addEventListener("click",()=>{[state.medium1,state.medium2]=[state.medium2,state.medium1];[state.n1,state.n2]=[state.n2,state.n1];update();});
 $("reset").addEventListener("click",()=>{stopAnimation();Object.assign(state,{medium1:"water",medium2:"air",n1:MEDIA.water.index,n2:MEDIA.air.index,angle:40,direction:1});update();if(!reducedMotion)startAnimation();});
 $("presets").addEventListener("click",e=>{const b=e.target.closest("button");if(b){state.medium1=b.dataset.a;state.medium2=b.dataset.b;state.n1=MEDIA[b.dataset.a].index;state.n2=MEDIA[b.dataset.b].index;update();}});
-document.querySelector(".view-toggle").addEventListener("click",e=>{const button=e.target.closest("button");if(!button)return;state.view=button.dataset.view;opticsScene.setMode(state.view);$("annotations").classList.toggle("is-hidden",state.view==="3d");document.querySelectorAll(".view-toggle button").forEach(item=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));});sceneElement.setAttribute("aria-label",state.view==="3d"?"Representación tridimensional del láser y los medios. Use las flechas izquierda y derecha para cambiar el ángulo.":"Diagrama interactivo. Arrastre el rayo o use las flechas izquierda y derecha para cambiar el ángulo.");update();});
+function update3dControls(){const fullscreen=document.fullscreenElement===sceneShell||fallbackFullscreen;$("controls-3d").classList.toggle("visible",fullscreen&&state.view==="3d");}
+document.querySelector(".view-toggle").addEventListener("click",e=>{const button=e.target.closest("button");if(!button)return;state.view=button.dataset.view;opticsScene.setMode(state.view);$("annotations").classList.toggle("is-hidden",state.view==="3d");document.querySelectorAll(".view-toggle button").forEach(item=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));});sceneElement.setAttribute("aria-label",state.view==="3d"?"Representación tridimensional del láser y los medios. Use las flechas izquierda y derecha para cambiar el ángulo.":"Diagrama interactivo. Arrastre el rayo o use las flechas izquierda y derecha para cambiar el ángulo.");update3dControls();update();});
 function angleFromPointer(event){const rect=sceneElement.getBoundingClientRect(),x=event.clientX-(rect.left+rect.width/2),y=event.clientY-(rect.top+rect.height/2);if(y<0)return;setAngle(Math.atan2(Math.abs(x),Math.max(1,y))*180/Math.PI);}
 let pointerId=null; sceneElement.addEventListener("pointerdown",e=>{if(state.view==="3d"||e.button!==0)return;pointerId=e.pointerId;sceneElement.setPointerCapture(pointerId);sceneElement.classList.add("dragging");angleFromPointer(e);});
 sceneElement.addEventListener("pointermove",e=>{if(e.pointerId===pointerId){e.preventDefault();angleFromPointer(e);}}); function release(e){if(e.pointerId===pointerId){pointerId=null;sceneElement.classList.remove("dragging");}} sceneElement.addEventListener("pointerup",release);sceneElement.addEventListener("pointercancel",release);
@@ -92,7 +94,7 @@ function startAnimation(){state.animating=true;const run=++state.animationRun;an
 function animate(run){if(!state.animating||run!==state.animationRun)return;state.angle+=state.direction*.18;if(state.angle>=82||state.angle<=3)state.direction*=-1;update();state.frame=requestAnimationFrame(()=>animate(run));} animateButton.addEventListener("click",()=>state.animating?stopAnimation():startAnimation());
 const fullscreenButton=$("fullscreen"),sceneShell=$("scene-shell");
 let fallbackFullscreen=false,previousScrollY=0;
-function updateFullscreenButton(active){fullscreenButton.setAttribute("aria-pressed",String(active));fullscreenButton.setAttribute("aria-label",active?"Salir de pantalla completa":"Ver escena en pantalla completa");fullscreenButton.querySelector(".fullscreen-label").textContent=active?"Salir":"Pantalla completa";}
+function updateFullscreenButton(active){fullscreenButton.setAttribute("aria-pressed",String(active));fullscreenButton.setAttribute("aria-label",active?"Salir de pantalla completa":"Ver escena en pantalla completa");fullscreenButton.querySelector(".fullscreen-label").textContent=active?"Salir":"Pantalla completa";update3dControls();}
 function setFallbackFullscreen(active){
   fallbackFullscreen=active;
   if(active){previousScrollY=scrollY;sceneShell.style.setProperty("--fullscreen-height",`${visualViewport?.height||innerHeight}px`);sceneShell.classList.add("fullscreen-fallback");document.body.classList.add("fullscreen-open");history.pushState({experimentFullscreen:true},"");}
@@ -109,6 +111,9 @@ document.addEventListener("fullscreenchange",()=>updateFullscreenButton(document
 addEventListener("popstate",()=>{if(fallbackFullscreen)setFallbackFullscreen(false);});
 addEventListener("keydown",event=>{if(event.key==="Escape"&&fallbackFullscreen)setFallbackFullscreen(false);});
 visualViewport?.addEventListener("resize",()=>{if(fallbackFullscreen)sceneShell.style.setProperty("--fullscreen-height",`${visualViewport.height}px`);});
+const stick=$("camera-stick"),stickKnob=stick.querySelector("i");let stickPointer=null,stickLast={x:0,y:0};
+function moveStick(event){const rect=stick.getBoundingClientRect(),x=Math.max(-1,Math.min(1,(event.clientX-(rect.left+rect.width/2))/(rect.width*.34))),y=Math.max(-1,Math.min(1,(event.clientY-(rect.top+rect.height/2))/(rect.height*.34)));stickKnob.style.transform=`translate(${x*28}px,${y*28}px)`;opticsScene.orbitCamera((x-stickLast.x)*.22,(y-stickLast.y)*.18);stickLast={x,y};}
+stick.addEventListener("pointerdown",event=>{stickPointer=event.pointerId;stick.setPointerCapture(stickPointer);stickLast={x:0,y:0};moveStick(event);});stick.addEventListener("pointermove",event=>{if(event.pointerId===stickPointer){event.preventDefault();moveStick(event);}});function releaseStick(event){if(event.pointerId!==stickPointer)return;stickPointer=null;stickLast={x:0,y:0};stickKnob.style.transform="translate(0,0)";}stick.addEventListener("pointerup",releaseStick);stick.addEventListener("pointercancel",releaseStick);
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;if(reducedMotion)animateButton.hidden=true;
 new ResizeObserver(()=>{let result;try{result=calculateRefraction(state.n1,state.n2,state.angle);}catch{return;}updateAnnotations(result);}).observe(sceneElement);
 window.addEventListener("pagehide",()=>{stopAnimation();opticsScene.dispose();},{once:true}); update();if(!reducedMotion)startAnimation();
