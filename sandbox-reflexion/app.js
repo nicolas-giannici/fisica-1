@@ -23,25 +23,32 @@ function statusFor(result) {
   if (result.bendsTowardNormal) return ["Refracción hacia la normal", "Al ingresar al medio de mayor índice, el rayo refractado se acerca a la normal."];
   return ["Refracción alejándose de la normal", "Al ingresar al medio de menor índice, el rayo refractado se aleja de la normal."];
 }
-function arcPath(angle, quadrant, radius = 83) {
-  const centerX = 500, centerY = 310, rad = angle * Math.PI / 180;
+function annotationGeometry() {
+  const width = sceneElement.clientWidth, height = sceneElement.clientHeight;
+  return { width, height, centerX: width / 2, centerY: height / 2, radius: Math.min(68, width * .18, height * .15) };
+}
+function arcPath(angle, quadrant) {
+  const { centerX, centerY, radius } = annotationGeometry(), rad = angle * Math.PI / 180;
   const side = quadrant.includes("left") ? -1 : 1, vertical = quadrant.includes("top") ? -1 : 1;
   const start = [centerX, centerY + vertical * radius];
   const end = [centerX + side * Math.sin(rad) * radius, centerY + vertical * Math.cos(rad) * radius];
-  return `M ${centerX} ${centerY} L ${start[0]} ${start[1]} A ${radius} ${radius} 0 0 ${side * vertical > 0 ? 1 : 0} ${end[0]} ${end[1]} Z`;
+  return `M ${centerX} ${centerY} L ${start[0]} ${start[1]} A ${radius} ${radius} 0 0 ${side * vertical < 0 ? 1 : 0} ${end[0]} ${end[1]} Z`;
 }
-function setLabel(id, angle, quadrant, radius = 115) {
+function setLabel(id, angle, quadrant) {
+  const { centerX, centerY, radius } = annotationGeometry(), labelRadius = radius + 28;
   const el = $(id), rad = angle * Math.PI / 360, side = quadrant.includes("left") ? -1 : 1, vertical = quadrant.includes("top") ? -1 : 1;
-  el.setAttribute("x", 500 + side * Math.sin(rad) * radius); el.setAttribute("y", 310 + vertical * Math.cos(rad) * radius);
+  el.setAttribute("x", centerX + side * Math.sin(rad) * labelRadius); el.setAttribute("y", centerY + vertical * Math.cos(rad) * labelRadius);
 }
 function updateAnnotations(result) {
+  const { width, height, centerY } = annotationGeometry();
+  $("annotations").setAttribute("viewBox",`0 0 ${width} ${height}`);
   const paths = [`<path class="angle-arc arc-i" d="${arcPath(result.incidentAngle,"left-bottom")}"/>`,`<path class="angle-arc arc-r" d="${arcPath(result.reflectedAngle,"right-bottom")}"/>`];
   if (!result.totalInternalReflection) paths.push(`<path class="angle-arc arc-2" d="${arcPath(result.refractedAngle,"right-top")}"/>`);
   $("angle-arcs").innerHTML = paths.join(""); setLabel("label-i",result.incidentAngle,"left-bottom"); setLabel("label-r",result.reflectedAngle,"right-bottom");
   $("label-2").style.display = result.totalInternalReflection ? "none" : "block"; if (!result.totalInternalReflection) setLabel("label-2",result.refractedAngle,"right-top");
   const name1 = mediumName(state.medium1,state.n1), name2 = mediumName(state.medium2,state.n2);
-  $("medium-top").textContent = `${name2} · n₂ = ${formatIndex(state.n2)}`; $("medium-top").setAttribute("x",28); $("medium-top").setAttribute("y",292);
-  $("medium-bottom").textContent = `${name1} · n₁ = ${formatIndex(state.n1)}`; $("medium-bottom").setAttribute("x",28); $("medium-bottom").setAttribute("y",344);
+  $("medium-top").textContent = `${name2} · n₂ = ${formatIndex(state.n2)}`; $("medium-top").setAttribute("x",16); $("medium-top").setAttribute("y",centerY-14);
+  $("medium-bottom").textContent = `${name1} · n₁ = ${formatIndex(state.n1)}`; $("medium-bottom").setAttribute("x",16); $("medium-bottom").setAttribute("y",centerY+25);
 }
 function update() {
   let result;
@@ -85,4 +92,5 @@ function startAnimation(){state.animating=true;const run=++state.animationRun;an
 function animate(run){if(!state.animating||run!==state.animationRun)return;state.angle+=state.direction*.18;if(state.angle>=82||state.angle<=3)state.direction*=-1;update();state.frame=requestAnimationFrame(()=>animate(run));} animateButton.addEventListener("click",()=>state.animating?stopAnimation():startAnimation());
 const fullscreenButton=$("fullscreen"),sceneShell=$("scene-shell");fullscreenButton.addEventListener("click",async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await sceneShell.requestFullscreen();});document.addEventListener("fullscreenchange",()=>{const active=document.fullscreenElement===sceneShell;fullscreenButton.setAttribute("aria-pressed",String(active));fullscreenButton.setAttribute("aria-label",active?"Salir de pantalla completa":"Ver escena en pantalla completa");fullscreenButton.querySelector(".fullscreen-label").textContent=active?"Salir":"Pantalla completa";});
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;if(reducedMotion)animateButton.hidden=true;
+new ResizeObserver(()=>{let result;try{result=calculateRefraction(state.n1,state.n2,state.angle);}catch{return;}updateAnnotations(result);}).observe(sceneElement);
 window.addEventListener("pagehide",()=>{stopAnimation();opticsScene.dispose();},{once:true}); update();if(!reducedMotion)startAnimation();
