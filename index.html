@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2f3336">
+  <title>Laboratorio de reflexión y refracción | Física I</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="#main"><strong>UTN<span>.BA</span></strong><small>Física I</small></a>
+    <p>Óptica geométrica · laboratorio interactivo</p>
+  </header>
+  <main id="main">
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow">Experiencia 01</p><h1 id="page-title">Cuando la luz<br><em>cambia de medio</em></h1></div>
+      <p class="lede">Modificá el ángulo de incidencia y observá cómo las leyes de reflexión y de Snell determinan el recorrido del rayo.</p>
+    </section>
+
+    <section class="lab" aria-label="Simulador de reflexión y refracción">
+      <div class="visual-column">
+        <div class="scene-shell" id="scene-shell">
+          <div class="scene-toolbar"><span id="scene-mode">ARRASTRÁ EL RAYO INCIDENTE</span><div class="view-toggle" role="group" aria-label="Tipo de visualización"><button type="button" data-view="2d" class="active" aria-pressed="true">2D</button><button type="button" data-view="3d" aria-pressed="false">3D</button></div><button id="fullscreen" class="fullscreen-button" type="button" aria-label="Ver escena en pantalla completa" aria-pressed="false"><span aria-hidden="true">⛶</span><span class="fullscreen-label">Pantalla completa</span></button><span class="scene-key"><i></i> Interfaz</span></div>
+          <div id="scene" tabindex="0" role="application" aria-label="Diagrama interactivo. Arrastre el rayo o use las flechas izquierda y derecha para cambiar el ángulo.">
+            <svg id="annotations" aria-hidden="true" viewBox="0 0 1000 620" preserveAspectRatio="none">
+              <g id="angle-arcs"></g>
+              <g class="labels">
+                <text id="label-i">θᵢ</text><text id="label-r">θᵣ</text><text id="label-2">θ₂</text>
+                <text id="medium-top" class="medium-label"></text><text id="medium-bottom" class="medium-label"></text>
+              </g>
+            </svg>
+            <div class="drag-hint" aria-hidden="true"><span>↔</span> arrastrar</div>
+          </div>
+          <p id="scene-description" class="sr-only" aria-live="polite"></p>
+          <div class="legend" aria-label="Referencias visuales">
+            <span><i class="line incident"></i>Incidente</span><span><i class="line reflected"></i>Reflejado</span><span><i class="line refracted"></i>Refractado</span><span><i class="line normal"></i>Normal</span>
+          </div>
+        </div>
+
+        <section class="readout" aria-labelledby="result-title">
+          <div class="result-state"><p class="eyebrow" id="result-title">Estado actual</p><h2 id="status-text">Refracción hacia la normal</h2><p id="explanation"></p></div>
+          <dl class="metrics">
+            <div><dt>Incidencia</dt><dd id="metric-i">48,0°</dd></div><div><dt>Reflexión</dt><dd id="metric-r">48,0°</dd></div><div><dt>Refracción</dt><dd id="metric-2">33,9°</dd></div><div><dt>Ángulo crítico</dt><dd id="metric-c">—</dd></div>
+          </dl>
+          <div class="equation"><span>Ley de Snell</span><strong id="equation-text"></strong></div>
+        </section>
+      </div>
+
+      <aside class="controls" aria-labelledby="controls-title">
+        <div class="controls-heading"><div><p class="eyebrow">Parámetros</p><h2 id="controls-title">Configurar ensayo</h2></div><button id="reset" class="icon-button" type="button">Restablecer</button></div>
+        <fieldset><legend>Medios</legend>
+          <div class="medium-control"><label for="medium-1">Medio de incidencia <span>n₁</span></label><div class="compound"><select id="medium-1"></select><input id="n1" type="number" min="0.01" max="10" step="0.00001" inputmode="decimal" aria-label="Índice del medio de incidencia"></div></div>
+          <button id="swap" class="swap" type="button"><span aria-hidden="true">⇅</span> Intercambiar medios</button>
+          <div class="medium-control"><label for="medium-2">Segundo medio <span>n₂</span></label><div class="compound"><select id="medium-2"></select><input id="n2" type="number" min="0.01" max="10" step="0.00001" inputmode="decimal" aria-label="Índice del segundo medio"></div></div>
+        </fieldset>
+        <fieldset><legend>Ángulo de incidencia</legend>
+          <div class="angle-row"><label for="angle-range">Respecto de la normal</label><div><input id="angle-number" type="number" min="0" max="89.9" step="0.1" inputmode="decimal"><span>°</span></div></div>
+          <div class="range-wrap"><input id="angle-range" type="range" min="0" max="89.9" step="0.1" value="48" aria-valuetext="48 grados"><i id="critical-marker" aria-hidden="true"></i></div>
+          <div class="range-scale"><span>0°</span><span>45°</span><span>90°</span></div>
+          <p id="critical-note" class="critical-note"></p>
+        </fieldset>
+        <fieldset><legend>Casos de estudio</legend><div id="presets" class="presets"></div></fieldset>
+        <button id="animate" class="primary-button" type="button" aria-pressed="false"><span class="play" aria-hidden="true"></span><span>Iniciar demostración</span></button>
+        <p class="keyboard-note">Teclado: usá ← y → sobre la escena o el slider.</p>
+      </aside>
+    </section>
+  </main>
+  <footer><span>Física I · Óptica geométrica</span><span>Reflexión y refracción en una interfaz plana</span></footer>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
